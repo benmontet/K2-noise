@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 
 space_craft_orientation = None #numpy array of (N_int, 3): alpha, beta, gamma
 # N_int number of short cadence
@@ -75,9 +76,55 @@ class ModelFrame:
 class DataFrame:
     '''
     Container for the downlinked data
+
+    PostageStamp: Which container is this inside?
     '''
-    def __init__(self):
-        pass
+    def __init__(self, time, quality, raw, flux, flux_err, flux_bkg_err, cosmic_rays, PostageStamp=None):
+        self.time = time #The integration time (start or end or midpoint?)
+        self.quality = quality #Quality flag
+
+        #Following are (N,N) images
+        self.raw = raw #Raw Counts
+        self.flux = flux
+        self.flux_err = flux_err
+        self.flux_bkg_err = flux_bkg_err
+        self.cosmic_rays = cosmic_rays
+
+        self.PostageStamp = PostageStamp
+
+        self.shape = self.flux.shape
+
+    @classmethod
+    def from_row(cls, row, PostageStamp):
+        '''
+        Load a DataFrame from a FITS record array row.
+        '''
+
+        #Unpack the FITS row
+        time, quality, raw, flux, flux_err, flux_bkg_err, cosmic_rays = row
+
+        return cls(time, quality, raw, flux, flux_err, flux_bkg_err, cosmic_rays, PostageStamp)
+
+    @property
+    def origin(self):
+        if self.PostageStamp is not None:
+            return(self.PostageStamp.origin)
+        else:
+            return (0, 0)
+
+class PostageStamp:
+    '''
+    A container of DataFrames.
+
+    Origin: specifies the origin of the 50x50 chip in focal plane coordinates
+    '''
+    def __init__(self, origin=None):
+        self.origin = (None, None)
+        self.shape = (None, None) #The shape of all the DataFrames inside it
+        self.DataFrames = deque()
+
+    def add_frame(self, dataFrame):
+        self.DataFrames.append(dataFrame)
 
 def likelihood_function(ModelFrame, DataFrame):
-    return chisq
+    return None
