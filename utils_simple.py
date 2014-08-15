@@ -1,22 +1,8 @@
 #Utilities to help process the raw K2 data product
-#For now, we are forced to work with the Engineering test data located here: ftp://archive.stsci.edu/pub/k2/tpf_eng/
-
 import numpy as np
-from astropy.io import ascii, fits
+from astropy.io import fits
 
-#The catalog of long cadence and short cadence targets are in the two files:
-
-filesc = "data/K2_E2_targets_sc.csv"
-filelc = "data/K2_E2_targets_lc.csv"
-
-#These are .csv files with the following fields
-#EPIC,    ra,        dec,      Kp,   list
-#the sc file also has a "comment" field which is the name of the target
-
-#Thus, given the EPIC number, we can look up which target file holds the frames.
-
-
-
+#Eventual hope is a class or something but for now just some example scripts to show how to get what you want
 
 filename = "data/kplr060021426-2014044044430_lpd-targ.fits"
 hdulist = fits.open(filename)

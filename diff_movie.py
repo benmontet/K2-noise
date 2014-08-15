@@ -1,7 +1,7 @@
 #Create a movie of the frames
 
 import numpy as np
-from utils import TIME, FLUX, QUALITY
+from utils_simple import TIME, FLUX, QUALITY
 
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
