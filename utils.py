@@ -3,6 +3,8 @@
 
 import numpy as np
 from astropy.io import ascii, fits
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 
 #The catalog of long cadence and short cadence targets are in the two files:
 
@@ -13,44 +15,58 @@ filelc = "data/K2_E2_targets_lc.csv"
 #EPIC,    ra,        dec,      Kp,   list
 #the sc file also has a "comment" field which is the name of the target
 
-#Thus, given the EPIC number, we can look up which target file holds the frames.
+#This is useful for looking up targets within a certain RA/DEC range.
+#Thus, given the EPIC number, we can download the target file holds the frames.
 
 
+base_url = "ftp://archive.stsci.edu/pub/k2/tpf_eng/"
 
+class MASTError(Exception):
+    '''
+    Raised when something goes wrong getting data from the MAST
+    '''
+    def __init__(self, msg):
+        self.msg = msg
 
-filename = "data/kplr060021426-2014044044430_lpd-targ.fits"
-hdulist = fits.open(filename)
+def download_target(EPIC, cadence="l", location=""):
+    '''
+    Given the EPIC number (as an integer), download the ~25Mb file to location. Cadence can be "l" or "s" to specify
+    long or short cadence.
+    '''
+    assert type(EPIC) == int, "Must supply EPIC as an int"
 
-BINTABLE = hdulist[1] #the FITS hdu that contains the information we care about
-APERTURE = hdulist[2] #we'll ignore this, but nice to know it's there
+    file_format = "kplr{:0>9d}-2014044044430_{}-targ.fits"
 
-header = BINTABLE.header
+    #Assemble URL of file on MAST
+    if cadence == "l":
+        file = file_format.format(EPIC, "lpd")
+        url = base_url + "long_cadence/" + file
+    elif cadence == "s":
+        file = file_format.format(EPIC, "spd")
+        url = base_url + "short_cadence/" + file
+    else:
+        raise MASTError("Must choose long ('l') or short ('s') cadence")
 
-data = BINTABLE.data
-cols = data.columns
+    try:
+        response = urlopen(url)
+        out_file = open(location + file, "wb")
+        out_file.write(response.read())
+        out_file.close()
+    except (HTTPError, URLError) as e:
+        raise MASTError(e)
 
-#1-D arrays the length of number of integrations
-TIME = data["TIME"]
-#Flags that describe spacecraft motion
-QUALITY = data["QUALITY"]
-
-#Images we might care about. They are a numpy array with
-#shape (nintegrations, N, N) arrays, where N = 50 is the number of pixels in the postage stamp in one direction.
-RAW = data["RAW_CNTS"]
-FLUX = data["FLUX"]
-FLUX_ERR = data["FLUX_ERR"]
-FLUX_BKG = data["FLUX_BKG"]
-FLUX_BKG_ERR = data["FLUX_BKG_ERR"]
-CR = data["COSMIC_RAYS"]
 
 def main():
+
+    download_target(60017806, cadence="s")
+
     #Print basic information
-    hdulist.info()
-
-    print(header)
-
-    #All available fields in the dataset
-    print(cols)
+    # hdulist.info()
+    #
+    # print(header)
+    #
+    # #All available fields in the dataset
+    # print(cols)
 
 if __name__=="__main__":
     main()
