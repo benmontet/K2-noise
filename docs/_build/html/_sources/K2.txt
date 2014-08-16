@@ -1,0 +1,31 @@
+===
+K2
+===
+
+.. py:module:: K2
+:synopsis: All the goodies
+
+:mod: `K2` is a package to load K2 data products into manipulable Python objects. It defines some key data structures.
+
+DataFrame
+---------
+
+The DataFrame class is designed to hold the (50,50) frame that results from an integration,
+along with any metadata specifically relevant to that frame.
+
+.. autoclass:: DataFrame
+   :members:
+
+.. autoclass:: PostageStamp
+   :members:
+
+
+Examples
+========
+
+.. code-block:: python
+
+    from K2 import DataFrame, PostageStamp
+    PS = PostageStamp.from_FITS("data/kplr060021426-2014044044430_lpd-targ.fits")
+    df = PS.dataFrames[0]
+    df.shape
