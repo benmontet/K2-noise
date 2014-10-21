@@ -4,6 +4,7 @@ from __future__ import division, print_function
 
 __all__ = ["find_centroid"]
 
+import logging
 import numpy as np
 from scipy.linalg import cho_factor, cho_solve
 from scipy.ndimage.filters import gaussian_filter
@@ -24,13 +25,25 @@ def fit_3x3(img):
     return x, y
 
 
-def find_centroid(img, smooth=-1):
+def find_centroid(img, smooth=-1, check_nan=True, fill_nan=True):
+    if check_nan and not np.any(np.isfinite(img)):
+        return np.nan, np.nan
+
+    if fill_nan:
+        m = np.isfinite(img)
+        img[~m] = np.median(img[m])
+
     if smooth > 0:
         img = gaussian_filter(img, smooth, mode="nearest")
+
     xi, yi = np.unravel_index(np.argmax(img), img.shape)
-    assert (xi >= 1 and xi < img.shape[0] - 1), "effed, x"
-    assert (yi >= 1 and yi < img.shape[1] - 1), "effed, y"
+    if not (xi >= 1 and xi < img.shape[0]-1 and
+            yi >= 1 and yi < img.shape[1]-1):
+        logging.warn("Maximum pixel is at the edge.")
+        return np.nan, np.nan
+
     ox, oy = fit_3x3(img[xi-1:xi+2, yi-1:yi+2])
+
     return xi + ox, yi + ox
 
 

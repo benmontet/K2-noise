@@ -5,35 +5,38 @@ from __future__ import division, print_function
 
 __all__ = []
 
+import os
 import kplr
 import numpy as np
 import matplotlib.pyplot as pl
+from multiprocessing import Pool
 
 from k2.centroid import centroid
 from k2.c3k import find_centroid
 
+base_path = "centroids"
+try:
+    os.makedirs(base_path)
+except os.error:
+    pass
+
+
+def process_tpf(tpf):
+    fn = os.path.join(base_path, os.path.split(tpf.filename)[1] + ".txt")
+    if os.path.exists(fn):
+        return
+    res = centroid(tpf)
+    np.savetxt(fn, np.vstack(res).T)
+
+
 client = kplr.API()
-tpfs = client.target_pixel_files(mission="k2", ktc_target_type="SC",
+tpfs = client.target_pixel_files(mission="k2", ktc_target_type="LC",
                                  adapter=kplr.mast.k2_dataset_adapter,
-                                 cls=kplr.api.K2TargetPixelFile)
+                                 cls=kplr.api.K2TargetPixelFile,
+                                 max_records=10000)
 
-m = None
-datasets = []
-for tpf in tpfs:
-    data = tpf.read()
-
-    times = data["TIME"]
-    images = data["FLUX"]
-    quality = data["QUALITY"]
-    print(np.sum(quality != 0))
-    if m is None:
-        m = np.isfinite(times) * (quality == 0)
-    else:
-        m *= np.isfinite(times) * (quality == 0)
-
-    datasets.append(images)
-
-print(np.sum(m))
+pool = Pool()
+pool.map(process_tpf, tpfs)
 
 assert 0
 # star = client.k2_star(202060145)
