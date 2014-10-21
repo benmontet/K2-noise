@@ -2,7 +2,7 @@
 
 from __future__ import division, print_function
 
-__all__ = []
+__all__ = ["centroid"]
 
 import numpy as np
 from functools import partial
@@ -23,12 +23,4 @@ def centroid(tpf, **kwargs):
     images[~m, :] = np.nan
 
     f = partial(find_centroid, **kwargs)
-    # for i, img in enumerate(images):
-    #     print("imageid", i, quality[i], times[i])
-    #     try:
-    #         f(img)
-    #     except:
-    #         blah = img
-    #         raise
-
     return [times] + list(imap(np.array, izip(*(imap(f, images)))))
