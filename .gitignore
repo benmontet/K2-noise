@@ -2,3 +2,5 @@
 *.png
 centroids
 *.pyc
+.ipynb_checkpoints
+*.fits
